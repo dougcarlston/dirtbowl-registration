@@ -212,6 +212,7 @@ function renderItem(item, vals, fname) {
   if (content === "[skipInstructions]") return "__SKIP__";
   if (item.type === "fib") return '<div class="textItem">' + renderFib(item, vals, pfx) + "</div>";
   if (item.type === "mc") return '<div class="textItem">' + renderMc(item, vals, pfx) + "</div>";
+  if (item.label === "T9") return '<div class="t9-summary-placeholder"></div>';
   if (!content) return "";
   if (item.type === "heading" || item.type === "headingitem") return '<h2 class="text heading">' + escH(content) + "</h2>";
   if (item.type === "subheading" || item.type === "subheadingitem") return '<h3 class="text subheading">' + escH(content) + "</h3>";
