@@ -52,6 +52,14 @@ span.record-count{font-weight:bold;color:#7B4500;}
 #loadingOverlay{display:flex;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:999;align-items:center;justify-content:center;}
 .spinner{width:44px;height:44px;border:5px solid #fff;border-top-color:#7B4500;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
+
+/* ---- Registration review summary (T9) ---- */
+.review-table { width:100%; border-collapse:collapse; margin:.5em 0 1em; font-size:.92em; }
+.rv-section   { background:#e8f0e8; color:#2a4a2a; font-weight:bold; padding:.4em .6em;
+                text-align:left; border-top:2px solid #5a8a5a; }
+.rv-label     { width:38%; padding:.35em .6em; color:#444; vertical-align:top;
+                border-bottom:1px solid #ddd; }
+.rv-val       { padding:.35em .6em; font-weight:500; border-bottom:1px solid #ddd; }
 </style>
 </head><body>
 <div id="outerContainer"><div id="tawalaProjectContainer">
@@ -213,6 +221,7 @@ function renderItem(item, vals, fname) {
   if (item.type === "fib") return '<div class="textItem">' + renderFib(item, vals, pfx) + "</div>";
   if (item.type === "mc") return '<div class="textItem">' + renderMc(item, vals, pfx) + "</div>";
   if (item.label === "T9") return '<div class="t9-summary-placeholder"></div>';
+  if (item.label === "T9") return '<div class="t9-summary-placeholder"></div>';
   if (!content) return "";
   if (item.type === "heading" || item.type === "headingitem") return '<h2 class="text heading">' + escH(content) + "</h2>";
   if (item.type === "subheading" || item.type === "subheadingitem") return '<h3 class="text subheading">' + escH(content) + "</h3>";
@@ -266,7 +275,13 @@ function buildFormHtml(form, vals) {
       }
     } else {
       // Subsequent pages: hidden until after submission
-      html += '<div id="formPage' + pageIdx + '" class="formPageBreak" style="display:none">' + pageInner + '</div>';
+      // Add a Submit button to all non-final pages
+      var isLastPage = (pageIdx === pages.length - 1);
+      var pageContent = pageInner;
+      if (!isLastPage) {
+        pageContent += '<div class="submitRow"><button id="submitBtn" class="submit" type="button">Submit &#x2192;</button></div>';
+      }
+      html += '<div id="formPage' + pageIdx + '" class="formPageBreak" style="display:none">' + pageContent + '</div>';
     }
   });
 
@@ -361,6 +376,52 @@ function showDoc(html) {
   }
 }
 
+
+function buildReviewSummary(fields) {
+  function v(k) { return fields[k] || ""; }
+  function row(label, val) {
+    if (!val || !String(val).trim()) return "";
+    return '<tr><td class="rv-label">' + escH(label) + '</td><td class="rv-val">' + escH(val) + '</td></tr>';
+  }
+  var dob = [v("RegAgeMo"), v("RegAgeDay"), v("RegAgeYr")].filter(Boolean).join("/");
+  var parentName = [v("ParentFirstName"), v("ParentLastName")].filter(Boolean).join(" ");
+  var playerName = [v("FirstName"), v("LastName")].filter(Boolean).join(" ");
+  var addr = [v("Address"), v("City"), v("Zip")].filter(Boolean).join(", ");
+  var phones = [v("Phone1"), v("Phone2"), v("Phone3")].filter(Boolean).join(" / ");
+  var emails = [v("ParentEmail"), v("ParentEmail2")].filter(Boolean).join(", ");
+  var friends = [v("Q10a"), v("Q10b"), v("Q10c")].filter(Boolean).join(", ");
+  var medPlan = [v("MedPlanName"), v("MedPlanNumber")].filter(Boolean).join(" \u2014 ");
+  var doctor  = [v("DocName"), v("DocPhone")].filter(Boolean).join(", ");
+  var coachVol = v("Q7a") ? "Yes" : "";
+  var umpireVol = v("Q8a") ? "Yes" : "";
+
+  var html = '<table class="review-table"><tbody>';
+  html += '<tr><th colspan="2" class="rv-section">Player</th></tr>';
+  html += row("Name", playerName);
+  html += row("Date of Birth", dob);
+  html += row("Gender", v("Q2"));
+  html += row("School", v("Q3a") || v("a"));
+  html += row("Division requested", v("Q5"));
+  html += row("Division last year", v("Q6"));
+  html += '<tr><th colspan="2" class="rv-section">Parent / Guardian</th></tr>';
+  html += row("Name", parentName);
+  html += row("Address", addr);
+  html += row("Email", emails);
+  html += row("Phone", phones);
+  html += '<tr><th colspan="2" class="rv-section">Preferences</th></tr>';
+  html += row("Coach preference", v("PreferredCoach"));
+  html += row("Friends on team", friends);
+  html += row("T-shirt size", v("Q11"));
+  html += row("Parent willing to coach", coachVol);
+  html += row("Player willing to umpire", umpireVol);
+  html += '<tr><th colspan="2" class="rv-section">Medical</th></tr>';
+  html += row("Insurance plan", medPlan);
+  html += row("Physician", doctor);
+  html += row("Physician address", v("DocAddress"));
+  html += '</tbody></table>';
+  return html;
+}
+
 function doSubmit() {
   var btn = document.getElementById("submitBtn");
   if (btn) btn.disabled = true;
@@ -371,6 +432,7 @@ function doSubmit() {
   var fields = {};
   var formEl = document.getElementById("tawalaForm");
   if (formEl) {
+    // Collect from ALL pages (including hidden ones) so summary has full data
     var inputs = formEl.querySelectorAll("input,textarea,select");
     var cbSeen = {};
     for (var i = 0; i < inputs.length; i++) {
@@ -386,8 +448,19 @@ function doSubmit() {
       }
     }
   }
+  // Also merge any server-saved values from Page 1 (stored in window._savedFields)
+  if (window._savedFields) {
+    Object.keys(window._savedFields).forEach(function(k) {
+      if (!fields[k]) fields[k] = window._savedFields[k];
+    });
+  }
   // Check if there are hidden subsequent pages on this form (only if not yet revealed)
-  var nextPage = document.getElementById("formPage1");
+  // Find the next unrevealed page after any currently-revealed page
+  var nextPage = null;
+  for (var pi = 1; pi <= 10; pi++) {
+    var pg = document.getElementById("formPage" + pi);
+    if (pg && !pg.getAttribute("data-revealed")) { nextPage = pg; break; }
+  }
   if (nextPage && !nextPage.getAttribute("data-revealed")) {
     // Page 1 of a multi-page form: save data server-side, then reveal Page 2
     fetch(RUNTIME, {
@@ -398,11 +471,18 @@ function doSubmit() {
       hideOverlay();
       if (data.action === "validationError") { showErr((data.errors || []).join("<br>")); if (btn) btn.disabled = false; return; }
       if (data.error) { showErr(data.error); if (btn) btn.disabled = false; return; }
+      // Data saved — stash Page 1 fields for the review summary
+      window._savedFields = Object.assign({}, fields);
       // Data saved — hide all of Page 1, reveal Page 2
       var page0 = document.getElementById("formPage0");
       if (page0) page0.style.display = "none";
       nextPage.style.display = "";
       nextPage.setAttribute("data-revealed", "true");
+      // Populate T9 review summary if this page contains it
+      (function() {
+        var summaryEl = nextPage.querySelector(".t9-summary-placeholder");
+        if (summaryEl) { summaryEl.innerHTML = buildReviewSummary(fields); }
+      })();
       // Update hidden fname to the same form (page 2 is still the same form submission)
       // Re-wire the submit button inside page 2
       var newBtn = nextPage.querySelector("#submitBtn") || nextPage.querySelector("button.submit");
