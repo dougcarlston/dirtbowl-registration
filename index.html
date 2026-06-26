@@ -449,7 +449,7 @@ function doSubmit() {
       }
     }
   }
-  // Also merge any server-saved values from Page 1 (stored in window._savedFields)
+  // Merge all prior-page fields into the current field set
   if (window._savedFields) {
     Object.keys(window._savedFields).forEach(function(k) {
       if (!fields[k]) fields[k] = window._savedFields[k];
@@ -472,17 +472,21 @@ function doSubmit() {
       hideOverlay();
       if (data.action === "validationError") { showErr((data.errors || []).join("<br>")); if (btn) btn.disabled = false; return; }
       if (data.error) { showErr(data.error); if (btn) btn.disabled = false; return; }
-      // Data saved — stash Page 1 fields for the review summary
-      window._savedFields = Object.assign({}, fields);
-      // Data saved — hide all of Page 1, reveal Page 2
+      // Accumulate all fields across pages into window._savedFields
+      if (!window._savedFields) window._savedFields = {};
+      Object.assign(window._savedFields, fields);
+      // Hide Page 1 (formPage0) on first page-advance
       var page0 = document.getElementById("formPage0");
-      if (page0) page0.style.display = "none";
+      if (page0 && page0.style.display !== "none") page0.style.display = "none";
+      // Also hide the previously-revealed page (Page 2 → Page 3 transition)
+      var prevRevealed = document.querySelector(".formPageBreak[data-revealed]");
+      if (prevRevealed) prevRevealed.style.display = "none";
       nextPage.style.display = "";
       nextPage.setAttribute("data-revealed", "true");
-      // Populate T9 review summary if this page contains it
+      // Populate T9 review summary with ALL accumulated fields
       (function() {
         var summaryEl = nextPage.querySelector(".t9-summary-placeholder");
-        if (summaryEl) { summaryEl.innerHTML = buildReviewSummary(fields); }
+        if (summaryEl) { summaryEl.innerHTML = buildReviewSummary(window._savedFields); }
       })();
       // Update hidden fname to the same form (page 2 is still the same form submission)
       // Re-wire the submit button inside page 2
