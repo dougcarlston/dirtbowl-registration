@@ -355,9 +355,10 @@ function showForm(form, vals) {
       // Find the placeholder div for this item and replace it
       var container = document.querySelector(".dynamicMc[data-item-label='" + item.label + "']");
       if (!container) return; // already resolved or not visible
-      // Re-render just this mc item now that choices are loaded
+      // Merge any saved value into vals so renderMc pre-selects the right choice
+      var mergedVals = Object.assign({}, vals, window._savedFields || {});
       var tmp = document.createElement("div");
-      tmp.innerHTML = renderMc(item, vals, "Registration:");
+      tmp.innerHTML = renderMc(item, mergedVals, "Registration:");
       container.parentNode.replaceChild(tmp.firstChild, container);
     });
   });
