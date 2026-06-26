@@ -540,6 +540,42 @@ function doSubmit() {
       if (btn) btn.disabled = false;
     });
   } else {
+    // Intra-form back-navigation: if InfoCorrect=a, skip4 says "go back to T2"
+    // (top of Page 1). This is a client-side operation — no server round-trip needed.
+    var infoCorrect = fields["InfoCorrect"] || fields["Registration:InfoCorrect"] || "";
+    if (infoCorrect === "a") {
+      // Restore Page 1 with all accumulated data, without submitting
+      var restoreFields = Object.assign({}, window._savedFields || {}, fields);
+      var formElR = document.getElementById("tawalaForm");
+      if (formElR) {
+        var inputsR = formElR.querySelectorAll("input,textarea,select");
+        for (var ri = 0; ri < inputsR.length; ri++) {
+          var elR = inputsR[ri], nR = elR.name;
+          if (!nR) continue;
+          var valR = restoreFields[nR] || restoreFields[nR.replace(/^[^:]+:/, "")] || "";
+          if (elR.type === "radio") { elR.checked = (elR.value === valR); }
+          else if (elR.type === "checkbox") { elR.checked = valR.split(",").indexOf(elR.value) >= 0; }
+          else { elR.value = valR; }
+        }
+        // Clear InfoCorrect so Page 1 doesn't re-trigger the back-navigation
+        inputsR = formElR.querySelectorAll("input[name='InfoCorrect'],input[name='Registration:InfoCorrect']");
+        for (var ri2 = 0; ri2 < inputsR.length; ri2++) { inputsR[ri2].checked = false; }
+        delete restoreFields["InfoCorrect"];
+        delete restoreFields["Registration:InfoCorrect"];
+        window._savedFields = restoreFields;
+      }
+      // Hide Pages 2 and 3, show Page 1
+      for (var pii = 1; pii <= 10; pii++) {
+        var pgR = document.getElementById("formPage" + pii);
+        if (pgR) { pgR.style.display = "none"; pgR.removeAttribute("data-revealed"); }
+      }
+      var pg0R = document.getElementById("formPage0");
+      if (pg0R) pg0R.style.display = "";
+      if (btn) btn.disabled = false;
+      hideOverlay();
+      window.scrollTo(0, 0);
+      return;
+    }
     fetch(RUNTIME, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
