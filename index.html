@@ -240,6 +240,8 @@ function buildFormHtml(form, vals) {
       pages[pages.length - 1].items.push(item);
       pages[pages.length - 1].instructionalLabel = item.label;
       pages.push({ items: [], instructionalLabel: null });
+    } else if (item.label === "skip3") {
+      pages.push({ items: [], instructionalLabel: null });
     } else {
       pages[pages.length - 1].items.push(item);
     }
@@ -389,20 +391,19 @@ function buildReviewSummary(fields) {
   var addr = [v("Address"), v("City"), v("Zip")].filter(Boolean).join(", ");
   var phones = [v("Phone1"), v("Phone2"), v("Phone3")].filter(Boolean).join(" / ");
   var emails = [v("ParentEmail"), v("ParentEmail2")].filter(Boolean).join(", ");
-  var friends = [v("Q10a"), v("Q10b"), v("Q10c")].filter(Boolean).join(", ");
-  var medPlan = [v("MedPlanName"), v("MedPlanNumber")].filter(Boolean).join(" \u2014 ");
-  var doctor  = [v("DocName"), v("DocPhone")].filter(Boolean).join(", ");
-  var coachVol = v("Q7a") ? "Yes" : "";
-  var umpireVol = v("Q8a") ? "Yes" : "";
-
+  var friends = [v("a"), v("b"), v("c")].filter(Boolean).join(", ");
+  var medPlan = [v("MedPlanName"), v("MedPlanNumber")].filter(Boolean).join(" — ");
+  var doctor = [v("DocName"), v("DocPhone")].filter(Boolean).join(", ");
+  var coachVol = v("ParentWillingToCoach") || "";
+  var umpireVol = v("WillingToUmpire") || "";
   var html = '<table class="review-table"><tbody>';
   html += '<tr><th colspan="2" class="rv-section">Player</th></tr>';
   html += row("Name", playerName);
   html += row("Date of Birth", dob);
-  html += row("Gender", v("Q2"));
-  html += row("School", v("Q3a") || v("a"));
-  html += row("Division requested", v("Q5"));
-  html += row("Division last year", v("Q6"));
+  html += row("Gender", v("SexMCQ"));
+  html += row("School", v("a"));
+  html += row("Division requested", v("DivRequest"));
+  html += row("Division last year", v("LastDiv"));
   html += '<tr><th colspan="2" class="rv-section">Parent / Guardian</th></tr>';
   html += row("Name", parentName);
   html += row("Address", addr);
@@ -411,7 +412,7 @@ function buildReviewSummary(fields) {
   html += '<tr><th colspan="2" class="rv-section">Preferences</th></tr>';
   html += row("Coach preference", v("PreferredCoach"));
   html += row("Friends on team", friends);
-  html += row("T-shirt size", v("Q11"));
+  html += row("T-shirt size", v("ShirtSize"));
   html += row("Parent willing to coach", coachVol);
   html += row("Player willing to umpire", umpireVol);
   html += '<tr><th colspan="2" class="rv-section">Medical</th></tr>';
