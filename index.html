@@ -229,6 +229,15 @@ function renderItem(item, vals, fname) {
 }
 
 function buildFormHtml(form, vals) {
+  // Build/refresh MCQ choice lookup map for the review summary
+  window._mcqChoices = window._mcqChoices || {};
+  (form.items || []).forEach(function(item) {
+    if (item.type === "mc" && item.name) {
+      var map = {};
+      (item.choices || []).forEach(function(c) { if (c.label && c.text) map[c.label] = c.text; });
+      window._mcqChoices[item.name] = map;
+    }
+  });
   // Pass 1: split items into page-segments at instructional-style text items,
   // and skip-segments at skipInstructions items.
   // An "instructional" text item acts as a page-break: everything before it is
@@ -336,6 +345,13 @@ function showForm(form, vals) {
   dynamicItems.forEach(function(item) {
     fetchDynamicChoices(item).then(function(choices) {
       item._dynamicChoices = choices;
+      // Update MCQ choice map for the review summary
+      if (item.name && choices.length) {
+        window._mcqChoices = window._mcqChoices || {};
+        var map = {};
+        choices.forEach(function(c) { if (c.label && c.text) map[c.label] = c.text; });
+        window._mcqChoices[item.name] = map;
+      }
       // Find the placeholder div for this item and replace it
       var container = document.querySelector(".dynamicMc[data-item-label='" + item.label + "']");
       if (!container) return; // already resolved or not visible
@@ -383,6 +399,22 @@ function buildReviewSummary(fields) {
   // Fields may be stored with "Registration:" prefix (from input name= attributes)
   // Try prefixed key first, then bare key
   function v(k) { return fields["Registration:" + k] || fields[k] || ""; }
+  // For MCQ fields: resolve the stored choice letter(s) to human-readable text
+  // Handles single-choice (radio) and multi-choice (checkbox, comma-separated)
+  function mcq(fieldName) {
+    var raw = v(fieldName);
+    if (!raw || !raw.trim()) return "";
+    var choiceMap = (window._mcqChoices || {})[fieldName] || {};
+    // Multi-choice: may be comma-separated labels
+    var labels = raw.split(",").map(function(s) { return s.trim(); }).filter(Boolean);
+    var texts = labels.map(function(lbl) { return choiceMap[lbl] || lbl; });
+    return texts.join(", ");
+  }
+  // For checkbox/volunteer fields: show "Yes" if any choice selected, "" if not
+  function yesNo(fieldName) {
+    var raw = v(fieldName);
+    return (raw && raw.trim()) ? "Yes" : "";
+  }
   function row(label, val) {
     if (!val || !String(val).trim()) return "";
     return '<tr><td class="rv-label">' + escH(label) + '</td><td class="rv-val">' + escH(val) + '</td></tr>';
@@ -396,16 +428,14 @@ function buildReviewSummary(fields) {
   var friends = [v("a"), v("b"), v("c")].filter(Boolean).join(", ");
   var medPlan = [v("MedPlanName"), v("MedPlanNumber")].filter(Boolean).join(" — ");
   var doctor = [v("DocName"), v("DocPhone")].filter(Boolean).join(", ");
-  var coachVol = v("ParentWillingToCoach") || "";
-  var umpireVol = v("WillingToUmpire") || "";
   var html = '<table class="review-table"><tbody>';
   html += '<tr><th colspan="2" class="rv-section">Player</th></tr>';
   html += row("Name", playerName);
   html += row("Date of Birth", dob);
-  html += row("Gender", v("SexMCQ"));
+  html += row("Gender", mcq("SexMCQ"));
   html += row("School", v("a"));
-  html += row("Division requested", v("DivRequest"));
-  html += row("Division last year", v("LastDiv"));
+  html += row("Division requested", mcq("DivRequest"));
+  html += row("Division last year", mcq("LastDiv"));
   html += '<tr><th colspan="2" class="rv-section">Parent / Guardian</th></tr>';
   html += row("Name", parentName);
   html += row("Address", addr);
@@ -414,9 +444,9 @@ function buildReviewSummary(fields) {
   html += '<tr><th colspan="2" class="rv-section">Preferences</th></tr>';
   html += row("Coach preference", v("PreferredCoach"));
   html += row("Friends on team", friends);
-  html += row("T-shirt size", v("ShirtSize"));
-  html += row("Parent willing to coach", coachVol);
-  html += row("Player willing to umpire", umpireVol);
+  html += row("T-shirt size", mcq("ShirtSize"));
+  html += row("Parent willing to coach", yesNo("ParentWillingToCoach"));
+  html += row("Player willing to umpire", yesNo("WillingToUmpire"));
   html += '<tr><th colspan="2" class="rv-section">Medical</th></tr>';
   html += row("Insurance plan", medPlan);
   html += row("Physician", doctor);
