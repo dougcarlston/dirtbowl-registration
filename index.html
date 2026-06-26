@@ -380,7 +380,9 @@ function showDoc(html) {
 
 
 function buildReviewSummary(fields) {
-  function v(k) { return fields[k] || ""; }
+  // Fields may be stored with "Registration:" prefix (from input name= attributes)
+  // Try prefixed key first, then bare key
+  function v(k) { return fields["Registration:" + k] || fields[k] || ""; }
   function row(label, val) {
     if (!val || !String(val).trim()) return "";
     return '<tr><td class="rv-label">' + escH(label) + '</td><td class="rv-val">' + escH(val) + '</td></tr>';
@@ -514,7 +516,38 @@ function doSubmit() {
       body: JSON.stringify({ action: "submitForm", projectId: pid, linkId: lid, formName: fname, fields: fields })
     }).then(function(r) { return r.json(); }).then(function(data) {
       hideOverlay();
-      if (data.action === "showForm") { showForm(data.form, data.currentValues || {}); return; }
+      if (data.action === "showForm") {
+        // If returning to the same Registration form (e.g. "change data"), restore Page 1
+        // by re-populating its inputs from _savedFields and hiding Pages 2/3
+        var allFields = Object.assign({}, window._savedFields || {}, data.currentValues || {});
+        if (data.formName === fname || data.formName === "Registration") {
+          // Re-populate all form inputs from saved + server values
+          var formEl2 = document.getElementById("tawalaForm");
+          if (formEl2) {
+            var inputs2 = formEl2.querySelectorAll("input,textarea,select");
+            for (var ii = 0; ii < inputs2.length; ii++) {
+              var el2 = inputs2[ii], n2 = el2.name;
+              if (!n2) continue;
+              var savedVal = allFields[n2] || allFields[n2.replace(/^[^:]+:/, "")] || "";
+              if (el2.type === "radio") { el2.checked = (el2.value === savedVal); }
+              else if (el2.type === "checkbox") { el2.checked = savedVal.split(",").indexOf(el2.value) >= 0; }
+              else { el2.value = savedVal; }
+            }
+            // Hide Pages 2 and 3, show Page 1
+            for (var pii = 1; pii <= 10; pii++) {
+              var pg2 = document.getElementById("formPage" + pii);
+              if (pg2) { pg2.style.display = "none"; pg2.removeAttribute("data-revealed"); }
+            }
+            var pg0 = document.getElementById("formPage0");
+            if (pg0) pg0.style.display = "";
+            window._savedFields = allFields;
+            if (btn) btn.disabled = false;
+            window.scrollTo(0, 0);
+            return;
+          }
+        }
+        showForm(data.form, allFields); return;
+      }
       if (data.action === "showDocument") { showDoc(data.html); return; }
       if (data.action === "redirect") { window.location.href = data.url; return; }
       if (data.action === "validationError") { showErr((data.errors || []).join("<br>")); if (btn) btn.disabled = false; return; }
