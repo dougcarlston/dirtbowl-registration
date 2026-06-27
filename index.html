@@ -596,6 +596,9 @@ function doSubmit() {
       }
       var pg0R = document.getElementById("formPage0");
       if (pg0R) pg0R.style.display = "";
+      // Reset skip label index so page 1 re-submit uses skip2 again (not skip4)
+      window._currentPageIndex = 0;
+      window._currentSkipLabel = (window._skipLabels || [])[0] || null;
       if (btn) btn.disabled = false;
       hideOverlay();
       window.scrollTo(0, 0);
