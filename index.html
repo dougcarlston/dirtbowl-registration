@@ -437,8 +437,16 @@ function buildReviewSummary(fields) {
   var playerName = [v("FirstName"), v("LastName")].filter(Boolean).join(" ");
   var addr = [v("Address"), v("City"), v("Zip")].filter(Boolean).join(", ");
   var phones = [v("Phone1"), v("Phone2"), v("Phone3")].filter(Boolean).join(" / ");
-  var emails = [v("ParentEmail"), v("ParentEmail2")].filter(Boolean).join(", ");
-  var friends = [v("a"), v("b"), v("c")].filter(Boolean).join(", ");
+  // Show only the primary email (confirmed match required to reach this page);
+  // omit the confirm copies ("g" and "ParentEmail2Confirm") from the summary.
+  var emailPrimary = v("ParentEmail");
+  var emailSecondary = v("ParentEmail2");
+  var emails = [emailPrimary, emailSecondary].filter(Boolean).join(", ");
+  // School is Q3 blank "a"; friends are Q10 blanks "a","b","c" — use prefixed lookup
+  var school = fields["Registration:a"] || fields["a"] || "";
+  var friends = [fields["Registration:Q10:a"] || fields["Q10:a"] || "",
+                 fields["Registration:b"] || fields["b"] || "",
+                 fields["Registration:c"] || fields["c"] || ""].filter(Boolean).join(", ");
   var medPlan = [v("MedPlanName"), v("MedPlanNumber")].filter(Boolean).join(" — ");
   var doctor = [v("DocName"), v("DocPhone")].filter(Boolean).join(", ");
   var html = '<table class="review-table"><tbody>';
@@ -446,7 +454,7 @@ function buildReviewSummary(fields) {
   html += row("Name", playerName);
   html += row("Date of Birth", dob);
   html += row("Gender", mcq("SexMCQ"));
-  html += row("School", v("a"));
+  html += row("School", school);
   html += row("Division requested", mcq("DivRequest"));
   html += row("Division last year", mcq("LastDiv"));
   html += '<tr><th colspan="2" class="rv-section">Parent / Guardian</th></tr>';
