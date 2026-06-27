@@ -340,6 +340,18 @@ function showForm(form, vals) {
   wireBtn();
   window.scrollTo(0, 0);
 
+  // Build skip label sequence for per-page validation (skip2, skip3, skip4...)
+  // skip1 is a preProcess block (runs at load time, not on submit) — exclude it
+  var skipLabels = [];
+  (form.items || []).forEach(function(it) {
+    if (it.type === "skipInstructions" && it.label && it.label !== "skip1") {
+      skipLabels.push(it.label);
+    }
+  });
+  window._skipLabels = skipLabels;
+  window._currentPageIndex = 0;
+  window._currentSkipLabel = skipLabels[0] || null;
+
   // Then fetch choices and patch each dynamic item in-place
   if (dynamicItems.length === 0) return;
   dynamicItems.forEach(function(item) {
@@ -500,7 +512,7 @@ function doSubmit() {
     fetch(RUNTIME, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "submitForm", projectId: pid, linkId: lid, formName: fname, fields: fields })
+      body: JSON.stringify({ action: "submitForm", projectId: pid, linkId: lid, formName: fname, fields: fields, skipLabel: window._currentSkipLabel || null })
     }).then(function(r) { return r.json(); }).then(function(data) {
       hideOverlay();
       if (data.action === "validationError") { showErr((data.errors || []).join("<br>")); if (btn) btn.disabled = false; return; }
@@ -508,6 +520,10 @@ function doSubmit() {
       // Accumulate all fields across pages into window._savedFields
       if (!window._savedFields) window._savedFields = {};
       Object.assign(window._savedFields, fields);
+      // Advance to next skip label for next page's validation
+      window._currentPageIndex = (window._currentPageIndex || 0) + 1;
+      var sl = window._skipLabels || [];
+      window._currentSkipLabel = sl[window._currentPageIndex] || null;
       // Hide Page 1 (formPage0) on first page-advance
       var page0 = document.getElementById("formPage0");
       if (page0 && page0.style.display !== "none") page0.style.display = "none";
@@ -580,7 +596,7 @@ function doSubmit() {
     fetch(RUNTIME, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "submitForm", projectId: pid, linkId: lid, formName: fname, fields: fields })
+      body: JSON.stringify({ action: "submitForm", projectId: pid, linkId: lid, formName: fname, fields: fields, skipLabel: window._currentSkipLabel || null })
     }).then(function(r) { return r.json(); }).then(function(data) {
       hideOverlay();
       if (data.action === "showForm") {
@@ -641,7 +657,7 @@ showOverlay();
 fetchWithTimeout(RUNTIME, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ action: "submitForm", projectId: projectId, linkId: linkId, formName: "", fields: {} })
+  body: JSON.stringify({ action: "getForm", projectId: projectId, linkId: linkId })
 }, 15000).then(function(r) { return r.json(); }).then(function(data) {
   hideOverlay();
   if (data.action === "showForm") { showForm(data.form, data.currentValues || {}); }
