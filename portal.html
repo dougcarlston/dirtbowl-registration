@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tawala — Project Library</title>
+<style>
+:root {
+  --brand: #1a6b9a;
+  --brand-dark: #124e72;
+  --brand-light: #e8f4fb;
+  --accent: #e07b2a;
+  --text: #1e2226;
+  --muted: #5a6472;
+  --border: #d4dce6;
+  --card-bg: #ffffff;
+  --bg: #f4f7fa;
+  --radius: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+/* ── NAV ── */
+nav {
+  background: var(--brand-dark);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  height: 56px;
+  gap: 2rem;
+}
+.nav-logo { font-size: 1.35rem; font-weight: 700; letter-spacing: .03em; color: #fff; text-decoration: none; }
+.nav-logo span { color: #7fd4f8; }
+nav a { color: rgba(255,255,255,.75); text-decoration: none; font-size: .9rem; transition: color .15s; }
+nav a:hover { color: #fff; }
+.nav-spacer { flex: 1; }
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 60%, #2a8fc0 100%);
+  color: #fff;
+  padding: 3.5rem 2rem 3rem;
+  text-align: center;
+}
+.hero h1 { font-size: 2.4rem; font-weight: 800; margin-bottom: .6rem; letter-spacing: -.01em; }
+.hero p { font-size: 1.1rem; opacity: .85; max-width: 560px; margin: 0 auto 1.8rem; }
+.hero-search {
+  display: flex; gap: .5rem; max-width: 480px; margin: 0 auto;
+}
+.hero-search input {
+  flex: 1; padding: .7rem 1rem; border-radius: 6px; border: none;
+  font-size: 1rem; outline: none;
+}
+.hero-search button {
+  padding: .7rem 1.4rem; background: var(--accent); color: #fff;
+  border: none; border-radius: 6px; font-size: 1rem; cursor: pointer;
+  font-weight: 600; transition: background .15s;
+}
+.hero-search button:hover { background: #c96b1a; }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  background: var(--brand);
+  color: rgba(255,255,255,.9);
+  display: flex; justify-content: center; gap: 3rem;
+  padding: .75rem 2rem;
+  font-size: .88rem;
+}
+.stats-bar strong { color: #fff; font-size: 1.1rem; display: block; }
+
+/* ── LAYOUT ── */
+.page { max-width: 1140px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+/* ── FILTERS ── */
+.filters {
+  display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.8rem; align-items: center;
+}
+.filter-btn {
+  padding: .38rem .9rem; border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--card-bg); color: var(--muted); cursor: pointer;
+  font-size: .85rem; font-weight: 500; transition: all .15s;
+}
+.filter-btn:hover { border-color: var(--brand); color: var(--brand); }
+.filter-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.results-count { margin-left: auto; color: var(--muted); font-size: .85rem; }
+
+/* ── GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; flex-direction: column;
+  transition: box-shadow .15s, transform .15s;
+  overflow: hidden;
+}
+.card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.1); transform: translateY(-2px); }
+
+.card-header {
+  height: 7px;
+}
+.card-body { padding: 1.1rem 1.2rem; flex: 1; }
+.card-category {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); margin-bottom: .4rem;
+}
+.card-title { font-size: 1rem; font-weight: 700; margin-bottom: .45rem; line-height: 1.3; }
+.card-desc { font-size: .84rem; color: var(--muted); line-height: 1.5; }
+
+.card-meta {
+  padding: .7rem 1.2rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .8rem; color: var(--muted);
+}
+.badge {
+  display: inline-flex; align-items: center; gap: .25rem;
+  background: var(--brand-light); color: var(--brand);
+  border-radius: 4px; padding: .18rem .45rem; font-size: .75rem; font-weight: 600;
+}
+
+.card-footer {
+  padding: .75rem 1.2rem;
+  border-top: 1px solid var(--border);
+  display: flex; gap: .5rem;
+}
+.btn-launch {
+  flex: 1; padding: .5rem; border-radius: 6px;
+  background: var(--brand); color: #fff;
+  border: none; font-weight: 600; font-size: .88rem;
+  cursor: pointer; text-align: center; text-decoration: none;
+  transition: background .15s;
+}
+.btn-launch:hover { background: var(--brand-dark); }
+.btn-detail {
+  padding: .5rem .8rem; border-radius: 6px;
+  background: transparent; color: var(--muted);
+  border: 1.5px solid var(--border); font-size: .88rem;
+  cursor: pointer; text-decoration: none; transition: all .15s;
+}
+.btn-detail:hover { border-color: var(--brand); color: var(--brand); }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+.empty svg { opacity: .3; margin-bottom: 1rem; }
+.empty h3 { font-size: 1.1rem; margin-bottom: .4rem; color: var(--text); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 100;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 12px; width: 90%; max-width: 520px;
+  max-height: 80vh; overflow-y: auto;
+  padding: 2rem; position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+.modal-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: none; border: none; font-size: 1.4rem;
+  cursor: pointer; color: var(--muted); line-height: 1;
+}
+.modal h2 { font-size: 1.3rem; margin-bottom: .3rem; }
+.modal-cat { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1rem; }
+.modal-section { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 1.2rem 0 .4rem; }
+.form-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+.form-chip {
+  background: var(--brand-light); color: var(--brand);
+  border-radius: 4px; padding: .2rem .55rem; font-size: .78rem;
+}
+.modal-launch {
+  display: block; width: 100%; margin-top: 1.5rem;
+  padding: .75rem; background: var(--brand); color: #fff;
+  border: none; border-radius: 8px; font-size: 1rem; font-weight: 700;
+  cursor: pointer; text-align: center; text-decoration: none;
+  transition: background .15s;
+}
+.modal-launch:hover { background: var(--brand-dark); }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center; padding: 2rem;
+  font-size: .82rem; color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="portal.html">Tawala<span>.net</span></a>
+  <a href="portal.html">Library</a>
+  <a href="#" onclick="showAbout(); return false;">About</a>
+  <div class="nav-spacer"></div>
+</nav>
+
+<div class="hero">
+  <h1>The Tawala Project Library</h1>
+  <p>Browse ready-made form projects — surveys, registrations, dashboards, communicators and more. Launch any project instantly.</p>
+  <div class="hero-search">
+    <input type="text" id="searchInput" placeholder="Search projects…" oninput="applyFilters()"/>
+    <button onclick="applyFilters()">Search</button>
+  </div>
+</div>
+
+<div class="stats-bar" id="statsBar">
+  <div><strong id="statProjects">—</strong> Projects</div>
+  <div><strong id="statForms">—</strong> Total Forms</div>
+  <div><strong id="statCategories">—</strong> Categories</div>
+</div>
+
+<div class="page">
+  <div class="filters" id="filterBar">
+    <button class="filter-btn active" data-cat="all" onclick="setFilter('all')">All</button>
+    <!-- category buttons injected by JS -->
+    <span class="results-count" id="resultsCount"></span>
+  </div>
+
+  <div class="grid" id="projectGrid"></div>
+  <div class="empty" id="emptyState" style="display:none">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <h3>No projects match your search</h3>
+    <p>Try a different keyword or category.</p>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent">
+    <button class="modal-close" onclick="closeModal()">&#215;</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<footer>
+  Tawala &mdash; Form &amp; Survey Platform &nbsp;|&nbsp; Project Library
+</footer>
+
+<script>
+// ── Runtime endpoint (same as runner.html) ──────────────────────────────
+const RUNTIME = "https://base44.app/api/apps/6a3304b10419fc2a3398ca67/functions/tawalaRuntime";
+
+// ── Category classification ─────────────────────────────────────────────
+const CATEGORIES = {
+  "Registration":  { color: "#1a6b9a", keywords: ["registration","register","signup","sign up","mvsc","dirtbowl","sports","volunteer"] },
+  "Survey":        { color: "#2a9a5a", keywords: ["survey","poll","simple survey","multiple question","get together","potluck","cff","nomination"] },
+  "Dashboard":     { color: "#7a3a9a", keywords: ["dashboard","admin","campaign","sports dashboard","st patrick"] },
+  "Communicator":  { color: "#c05a20", keywords: ["communicator","email","mailing"] },
+  "Template":      { color: "#4a7a4a", keywords: ["template"] },
+  "Data Manager":  { color: "#2a6a8a", keywords: ["profiler","invoic","alextim","clientpro","client"] },
+  "Sample":        { color: "#888",    keywords: ["designer candidate","test","display","form with","empty"] },
+};
+
+function classify(name) {
+  const lower = name.toLowerCase();
+  for (const [cat, { keywords }] of Object.entries(CATEGORIES)) {
+    if (keywords.some(k => lower.includes(k))) return cat;
+  }
+  return "Other";
+}
+
+function catColor(cat) {
+  return (CATEGORIES[cat] || { color: "#888" }).color;
+}
+
+// ── Descriptions ────────────────────────────────────────────────────────
+const DESCRIPTIONS = {
+  "DirtBowl":                     "Full league registration system for youth baseball — player sign-up, team management, coach dashboards, communicator, and payment handling.",
+  "RealDirtSergei":               "Extended DirtBowl variant with additional recruitment and roster management flows.",
+  "RealDirtwHeader":              "DirtBowl variant featuring a custom page header and enhanced admin tools.",
+  "SportsDashboards Template":    "Generic sports league management template — registration, teams, coaches, communicator, waiver and payment flows.",
+  "St Patrick SportsDashboards":  "St. Patrick's league customization of the SportsDashboards template with 100 forms.",
+  "CampaignDashboards":           "Political/advocacy campaign data dashboard — staff dashboards, poll tracking, database management, and communicator.",
+  "AlexTimon":                    "Real-estate client profiler and contact manager with filtering, communicator, and multi-currency support.",
+  "ClientProfiler":               "Client relationship profiler with contact management, property requirements, and a built-in communicator.",
+  "Dirtbowl Communicator":        "Mass-email communicator for the DirtBowl league — compose, send, track, and report on outgoing messages.",
+  "MVSC Communicator":            "Mass-email communicator template for sports clubs — multi-question surveys and message tracking.",
+  "MVSC Registration":            "Youth soccer club registration form template.",
+  "CFF":                          "Single-form nomination submission for a community foundation.",
+  "Simple Survey Template":       "Minimal survey + report template — a great starting point for single-topic surveys.",
+  "Multiple Question Survey Template": "Multi-question survey template with a built-in response report.",
+  "Get Together Template":        "Casual event survey — gather availability and preferences for a group get-together.",
+  "Potluck Template":             "Sign-up sheet for a potluck dinner — track who's bringing what.",
+  "Signup Sheet Template":        "Basic sign-up sheet template.",
+  "Signup Sheet Template w Email":"Sign-up sheet with automatic confirmation email.",
+  "Tawala Invoicing":             "Simple invoicing workflow — create, send, and track invoices.",
+  "VolunteerTest":                "Volunteer registration and assignment test project.",
+  "Designer Candidate App 01":    "Sample project used to evaluate Designer features — shows FIB, MC, and process examples.",
+};
+
+function describe(name) {
+  return DESCRIPTIONS[name] || "A Tawala project with " + "multiple forms and processes.";
+}
+
+// ── State ────────────────────────────────────────────────────────────────
+let allProjects = [];
+let activeFilter = "all";
+
+// ── Load from runtime API ────────────────────────────────────────────────
+async function loadProjects() {
+  // We'll fetch the project list from the entity API via the runtime's getProject action.
+  // Since we have all JSON locally embedded, we use a curated list instead.
+  // In production this would be: fetch(RUNTIME, {action:"listProjects"})
+  const raw = [
+    { name:"DirtBowl",                     id:"6a39cbf1659f3159bbde5792", forms:77 },
+    { name:"RealDirtSergei",               id:"6a39cbf1659f3159bbde579d", forms:64 },
+    { name:"RealDirtwHeader",              id:"6a39cbf1659f3159bbde579e", forms:60 },
+    { name:"SportsDashboards Template",    id:"6a39cbf1659f3159bbde57a3", forms:79 },
+    { name:"SportsDashboards Template.jdfFix", id:"6a39cbf1659f3159bbde57a2", forms:79 },
+    { name:"St Patrick SportsDashboards",  id:"6a39cbf1659f3159bbde57a4", forms:100 },
+    { name:"CampaignDashboards",           id:"6a39cbf1659f3159bbde578f", forms:35 },
+    { name:"AlexTimon",                    id:"6a39cbf1659f3159bbde578d", forms:26 },
+    { name:"ClientProfiler",              id:"6a39cbf1659f3159bbde5790", forms:26 },
+    { name:"Dirtbowl Communicator",        id:"6a39cbf1659f3159bbde5793", forms:19 },
+    { name:"MVSC Communicator",            id:"6a39cbf1659f3159bbde5799", forms:18 },
+    { name:"MVSC Registration",            id:"6a39cbf1659f3159bbde579a", forms:1  },
+    { name:"CFF",                          id:"6a39cbf1659f3159bbde578e", forms:1  },
+    { name:"Simple Survey Template",       id:"6a39cbf1659f3159bbde57a1", forms:2  },
+    { name:"Multiple Question Survey Template", id:"6a39cbf1659f3159bbde579b", forms:2 },
+    { name:"Get Together Template",        id:"6a39cbf1659f3159bbde5798", forms:2  },
+    { name:"Potluck Template",             id:"6a39cbf1659f3159bbde579c", forms:2  },
+    { name:"Signup Sheet Template",        id:"6a39cbf1659f3159bbde57a0", forms:1  },
+    { name:"Signup Sheet Template w Email",id:"6a39cbf1659f3159bbde579f", forms:1  },
+    { name:"Tawala Invoicing",             id:"6a39cbf1659f3159bbde57a5", forms:6  },
+    { name:"VolunteerTest",                id:"6a39cbf1659f3159bbde57a7", forms:2  },
+    { name:"Designer Candidate App 01",    id:"6a39cbf1659f3159bbde5791", forms:3  },
+  ];
+
+  allProjects = raw.map(p => ({
+    ...p,
+    category: classify(p.name),
+    description: describe(p.name),
+  }));
+
+  // Stats
+  const totalForms = allProjects.reduce((s, p) => s + p.forms, 0);
+  const cats = new Set(allProjects.map(p => p.category));
+  document.getElementById("statProjects").textContent = allProjects.length;
+  document.getElementById("statForms").textContent = totalForms;
+  document.getElementById("statCategories").textContent = cats.size;
+
+  // Build category filter buttons
+  const bar = document.getElementById("filterBar");
+  const existing = bar.querySelectorAll("[data-cat]");
+  existing[0].after(...Array.from(cats).sort().map(cat => {
+    const btn = document.createElement("button");
+    btn.className = "filter-btn";
+    btn.dataset.cat = cat;
+    btn.textContent = cat;
+    btn.onclick = () => setFilter(cat);
+    return btn;
+  }));
+
+  renderGrid();
+}
+
+// ── Filter + search ──────────────────────────────────────────────────────
+function setFilter(cat) {
+  activeFilter = cat;
+  document.querySelectorAll(".filter-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.cat === cat);
+  });
+  renderGrid();
+}
+
+function applyFilters() { renderGrid(); }
+
+function renderGrid() {
+  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  const filtered = allProjects.filter(p => {
+    const catMatch = activeFilter === "all" || p.category === activeFilter;
+    const textMatch = !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+    return catMatch && textMatch;
+  });
+
+  const grid = document.getElementById("projectGrid");
+  const empty = document.getElementById("emptyState");
+  document.getElementById("resultsCount").textContent = filtered.length + " project" + (filtered.length !== 1 ? "s" : "");
+
+  if (filtered.length === 0) { grid.innerHTML = ""; empty.style.display = ""; return; }
+  empty.style.display = "none";
+
+  grid.innerHTML = filtered.map(p => `
+    <div class="card">
+      <div class="card-header" style="background:${catColor(p.category)}"></div>
+      <div class="card-body">
+        <div class="card-category">${escH(p.category)}</div>
+        <div class="card-title">${escH(p.name)}</div>
+        <div class="card-desc">${escH(p.description)}</div>
+      </div>
+      <div class="card-meta">
+        <span class="badge">&#9741; ${p.forms} form${p.forms !== 1 ? "s" : ""}</span>
+      </div>
+      <div class="card-footer">
+        <a class="btn-launch" href="runner.html?projectId=${encodeURIComponent(p.id)}&linkId=library-${encodeURIComponent(p.id)}" target="_blank">&#9654; Launch</a>
+        <button class="btn-detail" onclick="showDetail(${escQ(JSON.stringify(p))})">Details</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ── Detail modal ────────────────────────────────────────────────────────
+function showDetail(p) {
+  if (typeof p === "string") p = JSON.parse(p);
+  document.getElementById("modalBody").innerHTML = `
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.25rem;">
+      <div style="width:12px;height:12px;border-radius:3px;background:${catColor(p.category)};flex-shrink:0"></div>
+      <div class="modal-cat">${escH(p.category)}</div>
+    </div>
+    <h2>${escH(p.name)}</h2>
+    <p style="color:var(--muted);font-size:.9rem;margin-top:.6rem;line-height:1.6">${escH(p.description)}</p>
+    <div class="modal-section">Project Details</div>
+    <table style="font-size:.85rem;border-collapse:collapse;width:100%">
+      <tr><td style="padding:.3rem .5rem .3rem 0;color:var(--muted);width:110px">Forms</td><td>${p.forms}</td></tr>
+      <tr><td style="padding:.3rem .5rem .3rem 0;color:var(--muted)">Category</td><td>${escH(p.category)}</td></tr>
+      <tr><td style="padding:.3rem .5rem .3rem 0;color:var(--muted)">Project ID</td><td style="font-family:monospace;font-size:.78rem">${escH(p.id)}</td></tr>
+    </table>
+    <a class="modal-launch" href="runner.html?projectId=${encodeURIComponent(p.id)}&linkId=library-${encodeURIComponent(p.id)}" target="_blank">&#9654;&nbsp; Launch Project</a>
+  `;
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+}
+
+function showAbout() {
+  document.getElementById("modalBody").innerHTML = `
+    <h2>About Tawala</h2>
+    <p style="color:var(--muted);font-size:.9rem;margin-top:.8rem;line-height:1.7">
+      Tawala is a form-and-survey platform for building multi-step data collection workflows — registrations, surveys, dashboards, communicators, and more.
+    </p>
+    <p style="color:var(--muted);font-size:.9rem;margin-top:.8rem;line-height:1.7">
+      Projects are defined in a structured JSON format and executed by the Tawala runtime engine. The library contains templates and complete applications ready to launch.
+    </p>
+    <div class="modal-section">Architecture</div>
+    <table style="font-size:.85rem;border-collapse:collapse;width:100%">
+      <tr><td style="padding:.35rem .5rem .35rem 0;color:var(--muted);width:110px">Runtime</td><td>TypeScript backend function</td></tr>
+      <tr><td style="padding:.35rem .5rem .35rem 0;color:var(--muted)">Storage</td><td>Base44 entity database</td></tr>
+      <tr><td style="padding:.35rem .5rem .35rem 0;color:var(--muted)">Format</td><td>Tawala JSON v3</td></tr>
+    </table>
+  `;
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+// ── Utils ────────────────────────────────────────────────────────────────
+function escH(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function escQ(s) { return "'" + String(s).replace(/'/g, "\\'") + "'"; }
+
+// ── Boot ─────────────────────────────────────────────────────────────────
+loadProjects();
+</script>
+</body>
+</html>
