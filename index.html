@@ -351,6 +351,7 @@ function showForm(form, vals) {
   window._skipLabels = skipLabels;
   window._currentPageIndex = 0;
   window._currentSkipLabel = skipLabels[0] || null;
+  window._formItems = form.items || [];
 
   // Then fetch choices and patch each dynamic item in-place
   if (dynamicItems.length === 0) return;
@@ -523,7 +524,56 @@ function doSubmit() {
       body: JSON.stringify({ action: "submitForm", projectId: pid, linkId: lid, formName: fname, fields: fields, skipLabel: window._currentSkipLabel || null })
     }).then(function(r) { return r.json(); }).then(function(data) {
       hideOverlay();
-      if (data.action === "validationError") { showErr((data.errors || []).join("<br>")); if (btn) btn.disabled = false; return; }
+      if (data.action === "validationError") {
+        var errMsg = (data.errors || []).join("<br>");
+        var target = data.skipTarget || "";
+        // Determine which page the skipTarget lives on.
+        // Page 1 items are in formPage0; if target is a page-1 item, navigate back there.
+        var page1Items = [];
+        if (window._formItems) {
+          var skip2Idx = -1;
+          for (var fi = 0; fi < window._formItems.length; fi++) {
+            if (window._formItems[fi].type === "skipInstructions" && window._formItems[fi].label === "skip2") { skip2Idx = fi; break; }
+          }
+          for (var fi2 = 0; fi2 < (skip2Idx >= 0 ? skip2Idx : window._formItems.length); fi2++) {
+            var lbl = window._formItems[fi2].label || window._formItems[fi2].name || "";
+            if (lbl) page1Items.push(lbl);
+          }
+        }
+        var targetOnPage1 = (target && (page1Items.indexOf(target) >= 0 || target === "T1" || target === "T2"));
+        if (targetOnPage1) {
+          // Hide all subsequent pages and restore page 1, same as edit flow
+          for (var pv = 1; pv <= 10; pv++) {
+            var pvPg = document.getElementById("formPage" + pv);
+            if (pvPg) { pvPg.style.display = "none"; pvPg.removeAttribute("data-revealed"); }
+          }
+          var pg0v = document.getElementById("formPage0");
+          if (pg0v) pg0v.style.display = "";
+          // Reset skip index to page 1
+          window._currentPageIndex = 0;
+          window._currentSkipLabel = (window._skipLabels || [])[0] || null;
+          // Merge submitted fields back into _savedFields so inputs stay populated
+          if (!window._savedFields) window._savedFields = {};
+          Object.assign(window._savedFields, fields);
+          // Re-populate page 1 inputs
+          var formElV = document.getElementById("tawalaForm");
+          if (formElV) {
+            var inputsV = formElV.querySelectorAll("input,textarea,select");
+            for (var vi = 0; vi < inputsV.length; vi++) {
+              var elV = inputsV[vi], nV = elV.name;
+              if (!nV) continue;
+              var valV = window._savedFields[nV] || window._savedFields[nV.replace(/^[^:]+:/, "")] || "";
+              if (elV.type === "radio") { elV.checked = (elV.value === valV); }
+              else if (elV.type === "checkbox") { elV.checked = valV.split(",").indexOf(elV.value) >= 0; }
+              else { elV.value = valV; }
+            }
+          }
+          window.scrollTo(0, 0);
+        }
+        showErr(errMsg);
+        if (btn) btn.disabled = false;
+        return;
+      }
       if (data.error) { showErr(data.error); if (btn) btn.disabled = false; return; }
       // Accumulate all fields across pages into window._savedFields
       if (!window._savedFields) window._savedFields = {};
