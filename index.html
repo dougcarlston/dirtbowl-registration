@@ -696,6 +696,17 @@ function doSubmit() {
       if (data.action === "redirect") { window.location.href = data.url; return; }
       if (data.action === "validationError") { showErr((data.errors || []).join("<br>")); if (btn) btn.disabled = false; return; }
       if (data.error) { showErr(data.error); if (btn) btn.disabled = false; return; }
+      if (data.action === "pageOk" || data.action === "formComplete") {
+        // Final page submitted successfully — show confirmation
+        var container = document.getElementById("formContainer") || document.body;
+        container.innerHTML = '<div style="padding:2em;text-align:center;">' +
+          '<h2>Thank you!</h2>' +
+          '<p>Your registration has been submitted successfully.</p>' +
+          '<p>You will receive a confirmation email if one was configured.</p>' +
+          '</div>';
+        window.scrollTo(0, 0);
+        return;
+      }
       showErr("Unexpected: " + JSON.stringify(data).slice(0, 200));
       if (btn) btn.disabled = false;
     }).catch(function(err) {
